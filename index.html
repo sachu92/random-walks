@@ -38,9 +38,6 @@
 			text-align:center;
 			border:1px solid #60b4e5;
 			margin:50px auto;
-			position: absolute;
-			top:400px;
-			left: 200px;
 			clear:both;
 	/*
 		CSS3 gradients for webkit and mozilla browsers fallback color for the rest:
@@ -58,6 +55,18 @@
 			-moz-border-radius:6px;
 			-webkit-border-radius:6px;
 			
+			}
+
+			#run-button-single {
+				position: absolute;
+				top:400px;
+				left: 200px;
+			}
+
+			#run-button-multiple {
+				position: absolute;
+				top:400px;
+				left: 350px;
 			}
 
 			div.button:hover{
@@ -80,34 +89,65 @@
 
 	<script>
 
-	  function makePlot(){
+	function generateMultipleWalks(maxTrials, walkLength) {
+		var data = [maxTrials], toss = 0;
+
+		for(var i = 0; i < maxTrials; i++)
+			data[i] = 0;
+		
+		for(var j = 0; j < maxTrials; j++) {
+	    	var sum = 0;
+			var last_zero = 0;
+			var walk = [0];
+	        for (var i = 1; i < walkLength; i++) {
+				toss = Math.random() * 1;
+				toss = (toss<0.5)?1:-1;
+				sum = sum + toss;
+				walk[i] = sum;
+				if(sum == 0) last_zero = i;
+			}
+			data[last_zero]++;
+		}
+
+		return data;
+	}
+
+	function generateSingleWalk(walkLength) {
+		var toss = 0;
+		
+    	var sum = 0;
+		var last_zero = 0;
+		var walk = [0];
+        for (var i = 1; i < walkLength; i++) {
+			toss = Math.random() * 1;
+			toss = (toss<0.5)?1:-1;
+			sum = sum + toss;
+			walk[i] = sum;
+			if(sum == 0) last_zero = i;
+		}
+
+		return walk;
+	}
+
+	function plotMultiple(){
 		/* implementation heavily influenced by http://bl.ocks.org/1166403 and https://gist.github.com/benjchristensen/2579599 */
 		// define dimensions of graph
 		var m = [80, 80, 80, 80]; // margins
 		var w = 1000 - m[1] - m[3]; // width
 		var h = 400 - m[0] - m[2]; // height
-		var maxTrials = 1000;
+		var maxTrials = 3000;
+		var walkLength = 1000;
 		// create a simple data array that we'll plot with a line (this array represents only the Y values, X will just be the index location)
-//		var data = [3, 6, 2, 7, 5, 2, 0, 3, 8, 9, 2, 5, 9, 3, 6, 3, 6, 2, 7, 5, 2, 1, 3, 8, 9, 2, 5, 9, 2, 7];
-		var data = [0], toss = 0;
-		var sum = 0;
-		var last_zero = 0;
-        for (var i = 1; i < maxTrials; i++) {
-				toss = Math.random() * 1;
-				toss = (toss<0.5)?1:-1;
-				sum = sum + toss;
-				//if( Math.abs(sum) > max)
-				//		max = Math.abs(sum);
-							data[i] = sum;
-							if(sum == 0) last_zero = i;
-							}
-							
-		document.getElementById("statistics").innerHTML = "Last lead change at step " + last_zero;
+		// var data = [3, 6, 2, 7, 5, 2, 0, 3, 8, 9, 2, 5, 9, 3, 6, 3, 6, 2, 7, 5, 2, 1, 3, 8, 9, 2, 5, 9, 2, 7];
+					
+		var data = generateMultipleWalks(maxTrials, walkLength);
+
+		//document.getElementById("statistics").innerHTML = "Last lead change at step " + last_zero;
 							
 		// X scale will fit all values from data[] within pixels 0-w
-		var x = d3.scale.linear().domain([0, data.length]).range([0, w]);
+		var x = d3.scale.linear().domain([0, walkLength]).range([0, w]);
 		// Y scale will fit values from 0-10 within pixels h-0 (Note the inverted domain for the y-scale: bigger is up!)
-		 var y = d3.scale.linear().domain([-Math.sqrt(maxTrials), Math.sqrt(maxTrials)]).range([h, 0]);
+		var y = d3.scale.linear().domain([0, 100]).range([h, 0]);
 			// automatically determining max range can work something like this
 		// var y = d3.scale.linear().domain([d3.min(data), d3.max(data)]).range([h, 0]);
 		// create a line function that can convert data[] into x and y points
@@ -124,7 +164,7 @@
 				console.log('Plotting Y value for data point: ' + d + ' to be at: ' + y(d) + " using our yScale.");
 				// return the Y coordinate where we want to plot this datapoint
 				return y(d); 
-			})
+			});
 			// Add an SVG element with the desired dimensions and margin.
 			var graph = d3.select("#graph").append("svg:svg")
 			      .attr("width", w + m[1] + m[3])
@@ -149,22 +189,82 @@
   			// Add the line by appending an svg:path element with the data line we created above
 			// do this AFTER the axes above so that the line is above the tick-lines
   			graph.append("svg:path").attr("d", line(data));
-							}
+	}
 
-
-							function remakePlot() {
-							document.getElementById("graph").innerHTML = "";
-															   makePlot();
+	function plotSingle(){
+		/* implementation heavily influenced by http://bl.ocks.org/1166403 and https://gist.github.com/benjchristensen/2579599 */
+		// define dimensions of graph
+		var m = [80, 80, 80, 80]; // margins
+		var w = 1000 - m[1] - m[3]; // width
+		var h = 400 - m[0] - m[2]; // height
+		var maxTrials = 3000;
+		var walkLength = 1000;
+		// create a simple data array that we'll plot with a line (this array represents only the Y values, X will just be the index location)
+		// var data = [3, 6, 2, 7, 5, 2, 0, 3, 8, 9, 2, 5, 9, 3, 6, 3, 6, 2, 7, 5, 2, 1, 3, 8, 9, 2, 5, 9, 2, 7];
+					
+		//var data = generateMultipleWalks(maxTrials, walkLength);
+		var data = generateSingleWalk(walkLength);
+		//document.getElementById("statistics").innerHTML = "Last lead change at step " + last_zero;
 							
-							}
+		// X scale will fit all values from data[] within pixels 0-w
+		var x = d3.scale.linear().domain([0, walkLength]).range([0, w]);
+		// Y scale will fit values from 0-10 within pixels h-0 (Note the inverted domain for the y-scale: bigger is up!)
+		var y = d3.scale.linear().domain([-100, 100]).range([h, 0]);
+			// automatically determining max range can work something like this
+		// var y = d3.scale.linear().domain([d3.min(data), d3.max(data)]).range([h, 0]);
+		// create a line function that can convert data[] into x and y points
+		var line = d3.svg.line()
+			// assign the X function to plot our line as we wish
+			.x(function(d,i) { 
+				// verbose logging to show what's actually being done
+				console.log('Plotting X value for data point: ' + d + ' using index: ' + i + ' to be at: ' + x(i) + ' using our xScale.');
+				// return the X coordinate where we want to plot this datapoint
+				return x(i); 
+			})
+			.y(function(d) { 
+				// verbose logging to show what's actually being done
+				console.log('Plotting Y value for data point: ' + d + ' to be at: ' + y(d) + " using our yScale.");
+				// return the Y coordinate where we want to plot this datapoint
+				return y(d); 
+			});
+			// Add an SVG element with the desired dimensions and margin.
+			var graph = d3.select("#graph").append("svg:svg")
+			      .attr("width", w + m[1] + m[3])
+			      .attr("height", h + m[0] + m[2])
+			    .append("svg:g")
+			      .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
+			// create yAxis
+			var xAxis = d3.svg.axis().scale(x).tickSize(-h).tickSubdivide(true);
+			// Add the x-axis.
+			graph.append("svg:g")
+			      .attr("class", "x axis")
+			      .attr("transform", "translate(0," + h + ")")
+			      .call(xAxis);
+			// create left yAxis
+			var yAxisLeft = d3.svg.axis().scale(y).ticks(4).orient("left");
+			// Add the y-axis to the left
+			graph.append("svg:g")
+			      .attr("class", "y axis")
+			      .attr("transform", "translate(-25,0)")
+			      .call(yAxisLeft);
+			
+  			// Add the line by appending an svg:path element with the data line we created above
+			// do this AFTER the axes above so that the line is above the tick-lines
+  			graph.append("svg:path").attr("d", line(data));
+	}
+
+	function remakePlot() {
+		document.getElementById("graph").innerHTML = "";
+	}
 						
-							window.onload = function() {
-							//makePlot();
-							document.getElementById("run-button").onclick = remakePlot;
-							};
+	window.onload = function() {
+		document.getElementById("run-button-single").onclick = function() { document.getElementById("graph").innerHTML = ""; plotSingle(); };
+		document.getElementById("run-button-multiple").onclick = function() { document.getElementById("graph").innerHTML = ""; plotMultiple(); };
+	}
 	</script>
 
-	<div class="button" id="run-button">Run</div>
+	<div class="button" id="run-button-single">Single</div>
+	<div class="button" id="run-button-multiple">Multiple</div>
 	<div id="statistics"> </div>
 	</body>
 </html>
